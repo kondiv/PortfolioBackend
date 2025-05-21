@@ -5,7 +5,7 @@ using Moq;
 using Services.Services;
 using Xunit;
 
-namespace Tests
+namespace Tests.Services
 {
     public class ProjectServiceTests
     {

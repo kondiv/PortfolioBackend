@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Models.Entities;
 using Xunit;
 
-namespace Tests;
+namespace Tests.Repositories;
 
 public class ProjectRepositoryTests
 {
@@ -170,9 +170,9 @@ public class ProjectRepositoryTests
 
         var dbContext = GetDbContext();
         var projectRepository = new ProjectRepository(dbContext);
-        
+
         var validProjectModel = new Project { Title = "Title", Description = "Description", GithubReference = "Reference" };
-        
+
         // Act
         Func<Task> act = () => projectRepository.AddAsync(validProjectModel, cancellationToken);
 
