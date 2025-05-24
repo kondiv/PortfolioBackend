@@ -1,4 +1,5 @@
-﻿using Data.Repositories;
+﻿using Data.Exceptions;
+using Data.Repositories;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Models.Entities;
@@ -96,20 +97,14 @@ public class ProjectRepositoryTests
     {
         // Arrange
         var dbContext = GetDbContext();
-        dbContext.Projects.Add(
-            new Project { ProjectId = Guid.NewGuid(), Title = "Заголовок", Description = "Описание", GithubReference = "Reference" }
-        );
-        dbContext.SaveChanges();
 
         var projectRepository = new ProjectRepository(dbContext);
 
         // Act
-        await projectRepository.RemoveAsync(Guid.NewGuid());
-
-        var projects = await projectRepository.GetAllAsync();
+        Func<Task> act = () => projectRepository.RemoveAsync(Guid.NewGuid());
 
         // Assert
-        projects.Should().HaveCount(1);
+        await act.Should().ThrowAsync<NotFoundException>();
     }
 
     [Fact]

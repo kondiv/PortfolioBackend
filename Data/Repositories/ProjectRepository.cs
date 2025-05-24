@@ -1,4 +1,5 @@
-﻿using Data.Interfaces;
+﻿using Data.Exceptions;
+using Data.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Models.Entities;
 
@@ -29,8 +30,8 @@ namespace Data.Repositories
             var project = await _context.Projects.FindAsync([id], cancellationToken: cancellationToken);
 
             if (project == null)
-            { 
-                return; 
+            {
+                throw new NotFoundException(); 
             }
 
             _context.Projects.Remove(project);

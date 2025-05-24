@@ -1,8 +1,11 @@
-﻿using Data.Interfaces;
+﻿using Data.Exceptions;
+using Data.Interfaces;
 using FluentAssertions;
 using Models.Entities;
+using Models.Exceptions;
 using Moq;
 using Services.Services;
+using Services.Validators;
 using Xunit;
 
 namespace Tests.Services
@@ -14,6 +17,7 @@ namespace Tests.Services
         {
             // Arrange
             var mockProjectRepository = new Mock<IProjectRepository>();
+            var projectValidator = new ProjectValidator();
 
             var projectsToReturnByRepo = new List<Project>()
             {
@@ -26,7 +30,7 @@ namespace Tests.Services
                 .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(projectsToReturnByRepo);
 
-            var projectService = new ProjectService(mockProjectRepository.Object);
+            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
 
             // Act
             var projects = await projectService.GetAllAsync();
@@ -45,6 +49,7 @@ namespace Tests.Services
         {
             // Arrange
             var mockProjectRepository = new Mock<IProjectRepository>();
+            var projectValidator = new ProjectValidator();
 
             var projectsToReturnByRepo = new List<Project>();
 
@@ -52,7 +57,7 @@ namespace Tests.Services
                 .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(projectsToReturnByRepo);
 
-            var projectService = new ProjectService(mockProjectRepository.Object);
+            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
 
             // Act
             var projects = await projectService.GetAllAsync();
@@ -71,6 +76,7 @@ namespace Tests.Services
         {
             // Assert
             var mockProjectRepository = new Mock<IProjectRepository>();
+            var projectValidator = new ProjectValidator();
 
             var cancellationToken = new CancellationToken(canceled: true);
 
@@ -78,13 +84,168 @@ namespace Tests.Services
                 .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new OperationCanceledException());
 
-            var service = new ProjectService(mockProjectRepository.Object);
+            var service = new ProjectService(mockProjectRepository.Object, projectValidator);
 
             // Act
             Func<Task> act = () => service.GetAllAsync(cancellationToken);
 
             // Assert
             await act.Should().ThrowAsync<OperationCanceledException>();
+        }
+
+        [Fact]
+        public async Task AddAsync_WhenModelIsInvalid_ThrowsException()
+        {
+            // Arrange
+            var projectValidator = new ProjectValidator();
+            var mockProjectRepository = new Mock<IProjectRepository>();
+
+            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
+
+            var invalidProject = new Project();
+
+            // Act
+            Func<Task> act = () => projectService.AddAsync(invalidProject);
+
+            // Assert
+            await act.Should().ThrowAsync<InvalidModelException>();
+        }
+
+        [Fact]
+        public async Task AddAsync_WhenOperationIsCanceled_ThrowsException()
+        {
+            // Arrange
+            var projectValidator = new ProjectValidator();
+            var mockProjectRepository = new Mock<IProjectRepository>();
+            var cancellationToken = new CancellationToken(canceled: true);
+
+            var validProject = new Project()
+            {
+                ProjectId = Guid.NewGuid(),
+                Title = "Title",
+                Description = "Description",
+                GithubReference = "https://github.com/kondiv/thoughtful"
+            };
+
+            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
+
+            // Act
+            Func<Task> act = () => projectService.AddAsync(validProject, cancellationToken);
+
+            // Assert
+            await act.Should().ThrowAsync<OperationCanceledException>();
+            mockProjectRepository
+                .Verify(
+                    repo => repo.AddAsync(validProject, cancellationToken),
+                    Times.Never
+                );
+        }
+
+        [Fact]
+        public async Task AddAsync_WhenModelIsValid_CallsRepositoryMethod()
+        {
+            // Arrange
+            var projectValidator = new ProjectValidator();
+            var mockProjectRepository = new Mock<IProjectRepository>();
+            var cancellationToken = new CancellationToken(canceled: false);
+
+            var validProject = new Project()
+            {
+                ProjectId = Guid.NewGuid(),
+                Title = "Title",
+                Description = "Description",
+                GithubReference = "https://github.com/kondiv/thoughtful"
+            };
+
+            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
+
+            // Act
+            Func<Task> act = () => projectService.AddAsync(validProject, cancellationToken);
+
+            // Assert
+            await act.Should().NotThrowAsync();
+
+            mockProjectRepository
+                .Verify(
+                    repo => repo.AddAsync(validProject, cancellationToken),
+                    Times.Once
+                );
+        }
+
+        [Fact]
+        public async Task RemoveAsync_WhenOperationIsCanceled_ThrowsException()
+        {
+            // Arrange
+            var projectValidator = new ProjectValidator();
+            var mockProjectRepository = new Mock<IProjectRepository>();
+
+            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
+
+            var cancellationToken = new CancellationToken(canceled: true);
+
+            var projectId = Guid.NewGuid();
+
+            // Act
+            Func<Task> act = () => projectService.RemoveAsync(projectId, cancellationToken);
+
+            // Assert
+            await act.Should().ThrowAsync<OperationCanceledException>();
+
+            mockProjectRepository
+                .Verify(
+                    repo => repo.RemoveAsync(projectId, cancellationToken),
+                    Times.Never
+                );
+        }
+
+        [Fact]
+        public async Task RemoveAsync_WhenSentIdIsNotFound_ThrowsException()
+        {
+            // Assert
+            var randomId = Guid.NewGuid();
+
+            var cancellationToken = new CancellationToken(canceled: false);
+
+            var projectValidator = new ProjectValidator();
+
+            var mockProjectRepository = new Mock<IProjectRepository>();
+            mockProjectRepository
+                .Setup(repo => repo.RemoveAsync(randomId, cancellationToken))
+                .ThrowsAsync(new NotFoundException());
+
+            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
+
+            // Act
+            Func<Task> act = () => projectService.RemoveAsync(randomId, cancellationToken);
+
+            // Assert
+            await act.Should().ThrowAsync<NotFoundException>();
+            mockProjectRepository.Verify(
+                    repo => repo.RemoveAsync(randomId, cancellationToken),
+                    Times.Once
+                );
+        }
+
+        [Fact]
+        public async Task RemoveAsync_WhenSentIdIsFound_ChangesDb()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var mockProjectRepository = new Mock<IProjectRepository>();
+            var projectValidator = new ProjectValidator();
+            var cancellationToken = new CancellationToken(canceled: false);
+
+            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
+
+            // Act
+            Func<Task> act = () => projectService.RemoveAsync(id, cancellationToken);
+
+            // Assert
+            await act.Should().NotThrowAsync();
+            mockProjectRepository.Verify(
+                    repo => repo.RemoveAsync(id, cancellationToken),
+                    Times.Once
+                );
         }
     }
 }
