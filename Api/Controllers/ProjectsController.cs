@@ -19,14 +19,28 @@ namespace Api.Controllers
         }
 
         [HttpGet("projects/all")]
-        public async Task<IActionResult> GetAll()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status499ClientClosedRequest)]
+        public async Task<ActionResult<IEnumerable<Project>>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            var projects = await _projectService.GetAllAsync();
-            return Ok(projects);
+            try
+            {
+                var projects = await _projectService.GetAllAsync(cancellationToken);
+                return Ok(projects);
+            }
+            catch (OperationCanceledException)
+            {
+                return StatusCode(499);
+            }
         }
 
         [HttpDelete("project/remove/{projectId}")]
-        public async Task<IActionResult> RemoveAsync(Guid projectId)
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status499ClientClosedRequest)]
+        public async Task<ActionResult> RemoveAsync(
+            Guid projectId,
+            CancellationToken cancellationToken = default)
         {
             try
             {
@@ -37,10 +51,21 @@ namespace Api.Controllers
             {
                 return NotFound();
             }
+            catch (OperationCanceledException)
+            {
+                return StatusCode(499);
+            }
         }
 
         [HttpPost("project/add")]
-        public async Task<IActionResult> AddAsync(string title, string description, string githubReference)
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status499ClientClosedRequest)]
+        public async Task<ActionResult> AddAsync(
+            string title, 
+            string description,
+            string githubReference,
+            CancellationToken cancellationToken = default)
         {
             var project = new Project()
             {
@@ -56,7 +81,11 @@ namespace Api.Controllers
             }
             catch (InvalidModelException)
             {
-                return BadRequest("Invalid model provided");
+                return BadRequest("Invalid data provided");
+            }
+            catch (OperationCanceledException)
+            {
+                return StatusCode(499);
             }
             catch (Exception)
             {
