@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Models.Entities;
 
-public partial class PortfolioContext : DbContext
+public partial class PortfolioContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
 {
     public PortfolioContext()
     {
@@ -13,6 +15,10 @@ public partial class PortfolioContext : DbContext
     {
     }
 
+    public virtual DbSet<Permission> Permissions { get; set; }
+
+    public virtual DbSet<RolePermission> RolePermissions { get; set; }
+
     public virtual DbSet<Project> Projects { get; set; }
 
     public virtual DbSet<ProjectMedium> ProjectMedia { get; set; }
@@ -22,6 +28,42 @@ public partial class PortfolioContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("uuid-ossp");
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Permission>(entity =>
+        {
+            entity.HasKey(e => e.PermissionId);
+
+            entity.ToTable("permission");
+
+            entity.Property(e => e.PermissionId)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("permission_id");
+            
+
+        });
+
+        modelBuilder.Entity<RolePermission>(entity =>
+        {
+            entity.HasKey(e => new { e.PermissionId, e.RoleId});
+
+            entity.ToTable("role_permission");
+
+            entity.Property(e => e.PermissionId)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("permission_id");
+
+            entity.HasOne(e => e.Role)
+                .WithMany(r => r.RolePermissions)
+                .HasForeignKey(e => e.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Permission)
+                .WithMany(p => p.RolePermissions)
+                .HasForeignKey(e => e.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+        });
 
         modelBuilder.Entity<Project>(entity =>
         {
