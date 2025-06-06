@@ -8,34 +8,34 @@ namespace Data.Seeder
     public class RolePermissionSeeder
     {
         private readonly RoleManager<ApplicationRole> _roleManager;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly PortfolioContext _context;
 
-        private Dictionary<string, List<string>> rolePermissions = new Dictionary<string, List<string>>()
+        private readonly Dictionary<string, List<string>> rolePermissions = new Dictionary<string, List<string>>()
         {
             [DefaultRoles.Guest] = [DefaultPermissions.ViewProjects],
+
             [DefaultRoles.Developer] =
             [
                 DefaultPermissions.ViewProjects,
                 DefaultPermissions.InteractWithEmployers,
                 DefaultPermissions.InteractWithProjects
-            ],
+                ],
+
             [DefaultRoles.Employer] =
             [
                 DefaultPermissions.ViewProjects,
                 DefaultPermissions.InteractWithDevelopers,
                 DefaultPermissions.InteractWithProjects,
-            ],
+                ],
+
             [DefaultRoles.Admin] = DefaultPermissions.All()
         };
 
         public RolePermissionSeeder(
             RoleManager<ApplicationRole> roleManager,
-            UserManager<ApplicationUser> userManager,
             PortfolioContext context)
         {
             _roleManager = roleManager;
-            _userManager = userManager;
             _context = context;
         }
 
@@ -50,9 +50,11 @@ namespace Data.Seeder
         {
             foreach(var permissionName in DefaultPermissions.All())
             {
-                if (!await _context.Permissions.AnyAsync(p => p.Name == permissionName))
+                bool exist = await _context.Permissions.AnyAsync(p => p.Name == permissionName);
+
+                if (!exist)
                 {
-                    await _context.AddAsync(new Permission() { Name = permissionName });
+                    await AddPermissionAsync(permissionName);
                 }
             }
 
@@ -70,11 +72,35 @@ namespace Data.Seeder
                     await AddRoleAsync(roleName);
                 }
             }
+
+            await _context.SaveChangesAsync();
         }
 
         private async Task SeedRolePermissions()
         {
-            
+            var relevantRoles = await GetRelevantRolesAsync();
+
+            foreach(var (roleName, permissions) in rolePermissions)
+            {
+                var role = relevantRoles.First(r => r.Name == roleName);
+
+                foreach(var permissionName in permissions)
+                {
+                    await AddRolePermissionIfNotExistAsync(role, permissionName);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task AddPermissionAsync(string permissionName)
+        {
+            var permission = new Permission()
+            {
+                Name = permissionName
+            };
+
+            await _context.Permissions.AddAsync(permission);
         }
 
         private async Task AddRoleAsync(string roleName)
@@ -85,6 +111,35 @@ namespace Data.Seeder
             };
 
             await _roleManager.CreateAsync(role);
+        }
+
+        private async Task<List<ApplicationRole>> GetRelevantRolesAsync()
+        {
+            return await _roleManager.Roles.ToListAsync();
+        }
+
+        private async Task AddRolePermissionIfNotExistAsync(ApplicationRole role, string permissionName)
+        {
+            var permission = await _context.Permissions.FirstAsync(p => p.Name == permissionName);
+
+            bool exist = await _context.RolePermissions.AnyAsync(rp =>
+                rp.RoleId == role.Id && rp.PermissionId == permission.PermissionId);
+
+            if(!exist)
+            {
+                await AddRolePermissionAsync(role.Id, permission.PermissionId);
+            }
+        }
+
+        private async Task AddRolePermissionAsync(string roleId, int permissionId)
+        {
+            var rolePermission = new RolePermission()
+            {
+                RoleId = roleId,
+                PermissionId = permissionId
+            };
+
+            await _context.RolePermissions.AddAsync(rolePermission);
         }
     }
 }

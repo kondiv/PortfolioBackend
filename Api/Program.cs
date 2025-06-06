@@ -1,5 +1,7 @@
 using Data.Interfaces;
 using Data.Repositories;
+using Data.Seeder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Models.Entities;
 using Services.Interfaces;
@@ -13,9 +15,14 @@ builder.Services.AddDbContext<PortfolioContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
+builder.Services
+    .AddIdentity<ApplicationUser, ApplicationRole>()
+    .AddEntityFrameworkStores<PortfolioContext>();
+
 builder.Services.AddSingleton<ProjectValidator>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddTransient<RolePermissionSeeder>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -44,6 +51,12 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var rolePermissionSeeder = scope.ServiceProvider.GetRequiredService<RolePermissionSeeder>();
+    await rolePermissionSeeder.SeedDataAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
