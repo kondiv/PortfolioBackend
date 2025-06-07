@@ -30,6 +30,19 @@ public partial class PortfolioContext : IdentityDbContext<ApplicationUser, Appli
         modelBuilder.HasPostgresExtension("uuid-ossp");
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.RefreshTokenId);
+
+            entity.Property(e => e.RefreshTokenId)
+                .HasDefaultValueSql("uuid_generate_v4()");
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<Permission>(entity =>
         {
             entity.HasKey(e => e.PermissionId);
