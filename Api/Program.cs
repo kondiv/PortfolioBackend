@@ -1,3 +1,4 @@
+using Api.Extensions;
 using Data.Interfaces;
 using Data.Repositories;
 using Data.Seeder;
@@ -21,10 +22,26 @@ builder.Services
     .AddIdentity<ApplicationUser, ApplicationRole>()
     .AddEntityFrameworkStores<PortfolioContext>();
 
+#region Other
+
+builder.Services.AddJwtSettings(builder.Configuration);
 builder.Services.AddSingleton<ProjectValidator>();
-builder.Services.AddScoped<IProjectService, ProjectService>();
-builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddTransient<RolePermissionSeeder>();
+
+#endregion
+
+#region Services
+
+builder.Services.AddScoped<IProjectService, ProjectService>();
+
+#endregion
+
+#region Repositories
+
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+
+#endregion
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -52,44 +69,7 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod());
 });
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters()
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
-            )
-    };
-
-    options.Events = new JwtBearerEvents()
-    {
-        OnMessageReceived = context =>
-        {
-            var accessToken = context.Request.Cookies["access_token"];
-
-            if (!string.IsNullOrEmpty(accessToken))
-            {
-                context.Token = accessToken;
-            }
-
-            return Task.CompletedTask;
-        }
-    };
-});
-
-
+builder.Services.AddCustomJwtBearer();
 
 var app = builder.Build();
 

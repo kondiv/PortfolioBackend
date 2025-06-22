@@ -25,10 +25,37 @@ public partial class PortfolioContext : IdentityDbContext<ApplicationUser, Appli
 
     public virtual DbSet<Technology> Technologies { get; set; }
 
+    public virtual DbSet<Skill> Skills { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("uuid-ossp");
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Skill>(entity =>
+        {
+            entity.HasKey(e => e.SkillId);
+
+            entity.Property(e => e.SkillId)
+                .ValueGeneratedOnAdd();
+        });
+
+        modelBuilder.Entity<UserSkill>(entity =>
+        {
+            entity.HasKey(e => e.UserSkillId);
+
+            entity.Property(e => e.UserSkillId)
+                .ValueGeneratedOnAdd();
+
+            entity.HasOne(e => e.Skill)
+                .WithMany(s => s.UserSkills)
+                .HasForeignKey(e => e.SkillId);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.UserSkills)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {
