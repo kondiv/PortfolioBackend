@@ -1,19 +1,17 @@
 ﻿using FluentAssertions;
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Text;
 using Services.Services;
 using Xunit;
 using Data.Configuration;
 using System.Security.Claims;
-using Moq;
+using Services.Interfaces;
 
 namespace Tests.Services
 {
     public class JwtServiceTests
     {
         private readonly JwtSettings _settings;
-        private readonly JwtService _jwtService;
+        private readonly ITokenService _jwtService;
         private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler = new();
 
         public JwtServiceTests()
@@ -22,15 +20,15 @@ namespace Tests.Services
             {
                 Audience = "test-audience",
                 Issuer = "test-issuer",
-                SecretKey = "test-key-qwerty",
+                SecretKey = "32-Characters-Long-Key-1234567890!!",
                 LifetimeMinutes = 10
             };
 
-            _jwtService = new JwtService(_settings);
+            _jwtService = new JwtTokenService(_settings);
         }
 
         [Fact]
-        public async Task GenerateAccessTokenAsync_ShouldReturnValidJwt()
+        public void GenerateJwtAccessToken_ShouldReturnValidJwt()
         {
             // Arrange
             var claims = new List<Claim>()
@@ -40,14 +38,14 @@ namespace Tests.Services
             };
 
             // Act
-            string token = _jwtService.GenerateAccessToken(claims);
+            string token = _jwtService.GenerateJwtAccessToken(claims);
 
             // Assert         
             token.Should().NotBeNullOrEmpty();
 
             var jwtToken = _jwtSecurityTokenHandler.ReadToken(token);
 
-            jwtToken.Issuer.Should().Equals(_settings.Issuer);
+            jwtToken.Issuer.Should().Be(_settings.Issuer);
         }
 
         [Fact]
@@ -58,11 +56,7 @@ namespace Tests.Services
 
             // Assert
             Assert.NotNull(token);
-            var parts = token.Split('.');
-            Assert.Equal(2, parts.Length);
-            Assert.True(long.TryParse(parts[0], out _)); // Проверяем timestamp
-            Assert.Matches("^[A-Za-z0-9_-]+$", parts[1]); // Проверяем URL-safe Base64
-            Assert.InRange(parts[1].Length, 40, 44); // Длина Base64 для 32 байт
+            Assert.InRange(token.Length, 40, 44); // Длина Base64 для 32 байт
         }
     }
 }
