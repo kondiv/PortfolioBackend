@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Models.Entities;
+using Domain.Entities;
 
 namespace Services.Validators
 {
@@ -31,7 +31,7 @@ namespace Services.Validators
                 .Must(ContainGithubAddress).WithMessage("Not github reference");
         }
 
-        private bool ContainGithubAddress(string address)
+        private static bool ContainGithubAddress(string address)
         {
             return address.StartsWith(githubAddress, StringComparison.Ordinal);
         }

@@ -1,7 +1,7 @@
 ﻿using Data.Exceptions;
 using Microsoft.AspNetCore.Mvc;
-using Models.Entities;
-using Models.Exceptions;
+using Domain.Entities;
+using Domain.Exceptions;
 using Services.Interfaces;
 using System.Runtime.InteropServices;
 
@@ -34,7 +34,7 @@ namespace Api.Controllers
             }
         }
 
-        [HttpDelete("project/remove/{projectId}")]
+        [HttpDelete("project/remove/{projectId:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status499ClientClosedRequest)]
@@ -44,7 +44,7 @@ namespace Api.Controllers
         {
             try
             {
-                await _projectService.RemoveAsync(projectId);
+                await _projectService.RemoveAsync(projectId, cancellationToken);
                 return NoContent();
             }
             catch (NotFoundException)
@@ -76,7 +76,7 @@ namespace Api.Controllers
 
             try
             {
-                await _projectService.AddAsync(project);
+                await _projectService.AddAsync(project, cancellationToken);
                 return NoContent();
             }
             catch (InvalidModelException)

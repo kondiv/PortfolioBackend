@@ -2,14 +2,13 @@ using Api.Extensions;
 using Data.Interfaces;
 using Data.Repositories;
 using Data.Seeder;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Models.Entities;
+using Domain.Entities;
 using Services.Interfaces;
 using Services.Services;
 using Services.Validators;
-using System.Text;
+using Mapster;
+using Services.Mapper;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +41,12 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 
 #endregion
 
+#region Mapper
+
+builder.Services.AddMapster();
+ApplicationUserMapper.Configure();
+
+#endregion
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -64,7 +69,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost",
         policy => policy
-            .AllowAnyOrigin() // временно
+            .AllowAnyOrigin() // 
             .AllowAnyHeader()
             .AllowAnyMethod());
 });

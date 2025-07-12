@@ -1,8 +1,9 @@
 ﻿using Data.Exceptions;
+using Data.Interfaces;
 using Data.Repositories;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Models.Entities;
+using Domain.Entities;
 using Xunit;
 
 namespace Tests.Repositories;
@@ -13,8 +14,8 @@ public class ProjectRepositoryTests
     public async Task GetAllAsync_WhenNoProjectsExist_ReturnsEmptyList()
     {
         // Arrange
-        using var dbContext = GetDbContext();
-        var projectRepository = new ProjectRepository(dbContext);
+        await using var dbContext = GetDbContext();
+        IProjectRepository projectRepository = new ProjectRepository(dbContext);
 
         // Act
         var projects = await projectRepository.GetAllAsync();
@@ -27,7 +28,7 @@ public class ProjectRepositoryTests
     public async Task GetAllAsync_WhenOperationIsCanceled_ThrowsException()
     {
         // Arrange
-        using var dbContext = GetDbContext();
+        await using var dbContext = GetDbContext();
         var projectRepository = new ProjectRepository(dbContext);
 
         var cancellationToken = GetCanceledCancellationToken();
@@ -44,26 +45,27 @@ public class ProjectRepositoryTests
     {
         // Arrange
         var firstProjectGuid = Guid.NewGuid();
-        var firstProjectTitle = "Первый проект";
+        const string firstProjectTitle = "Первый проект";
 
-        using var dbContext = GetDbContext();
+        await using var dbContext = GetDbContext();
         dbContext.Projects.AddRange(
             new Project { ProjectId = firstProjectGuid, Title = firstProjectTitle, Description = "Описание", GithubReference = "Reference" },
             new Project { ProjectId = Guid.NewGuid(), Title = "Заголовок", Description = "Описание", GithubReference = "Reference" },
             new Project { ProjectId = Guid.NewGuid(), Title = "Заголовок", Description = "Описание", GithubReference = "Reference" }
             );
-        dbContext.SaveChanges();
+        await dbContext.SaveChangesAsync();
 
-        var projectRepository = new ProjectRepository(dbContext);
+        IProjectRepository projectRepository = new ProjectRepository(dbContext);
 
         // Act
         var projects = await projectRepository.GetAllAsync();
 
         // Assert
-        projects.Should().NotBeNullOrEmpty();
-        projects.Should().HaveCount(3);
-        projects.First().ProjectId.Should().Be(firstProjectGuid);
-        projects.First().Title.Should().Be(firstProjectTitle);
+        var projectsList = projects.ToList();
+        projectsList.Should().NotBeNullOrEmpty();
+        projectsList.Should().HaveCount(3);
+        projectsList.First().ProjectId.Should().Be(firstProjectGuid);
+        projectsList.First().Title.Should().Be(firstProjectTitle);
     }
 
     [Fact]
@@ -80,7 +82,7 @@ public class ProjectRepositoryTests
         );
         dbContext.SaveChanges();
 
-        var projectRepository = new ProjectRepository(dbContext);
+        IProjectRepository projectRepository = new ProjectRepository(dbContext);
 
         // Act
         await projectRepository.RemoveAsync(firstProjectId);
@@ -98,7 +100,7 @@ public class ProjectRepositoryTests
         // Arrange
         var dbContext = GetDbContext();
 
-        var projectRepository = new ProjectRepository(dbContext);
+        IProjectRepository projectRepository = new ProjectRepository(dbContext);
 
         // Act
         Func<Task> act = () => projectRepository.RemoveAsync(Guid.NewGuid());
@@ -128,7 +130,7 @@ public class ProjectRepositoryTests
     {
         // Arrange
         var dbContext = GetDbContext();
-        var projectRepository = new ProjectRepository(dbContext);
+        IProjectRepository projectRepository = new ProjectRepository(dbContext);
 
         var invalidProjectModel = new Project();
 
@@ -144,7 +146,7 @@ public class ProjectRepositoryTests
     {
         // Arrange
         var dbContext = GetDbContext();
-        var projectRepository = new ProjectRepository(dbContext);
+        IProjectRepository projectRepository = new ProjectRepository(dbContext);
 
         var validProjectModel = new Project { Title = "Title", Description = "Description", GithubReference = "Reference" };
 

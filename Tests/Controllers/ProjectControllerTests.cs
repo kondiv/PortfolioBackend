@@ -2,8 +2,8 @@
 using Data.Exceptions;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
-using Models.Entities;
-using Models.Exceptions;
+using Domain.Entities;
+using Domain.Exceptions;
 using Moq;
 using Services.Interfaces;
 using Xunit;

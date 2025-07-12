@@ -1,9 +1,10 @@
 ﻿using Data.Exceptions;
 using Data.Interfaces;
 using FluentAssertions;
-using Models.Entities;
-using Models.Exceptions;
+using Domain.Entities;
+using Domain.Exceptions;
 using Moq;
+using Services.Interfaces;
 using Services.Services;
 using Services.Validators;
 using Xunit;
@@ -30,7 +31,7 @@ namespace Tests.Services
                 .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(projectsToReturnByRepo);
 
-            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
+            IProjectService projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
 
             // Act
             var projects = await projectService.GetAllAsync();
@@ -51,13 +52,11 @@ namespace Tests.Services
             var mockProjectRepository = new Mock<IProjectRepository>();
             var projectValidator = new ProjectValidator();
 
-            var projectsToReturnByRepo = new List<Project>();
-
             mockProjectRepository
                 .Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(projectsToReturnByRepo);
+                .ReturnsAsync([]);
 
-            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
+            IProjectService projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
 
             // Act
             var projects = await projectService.GetAllAsync();
@@ -100,7 +99,7 @@ namespace Tests.Services
             var projectValidator = new ProjectValidator();
             var mockProjectRepository = new Mock<IProjectRepository>();
 
-            var projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
+            IProjectService projectService = new ProjectService(mockProjectRepository.Object, projectValidator);
 
             var invalidProject = new Project();
 

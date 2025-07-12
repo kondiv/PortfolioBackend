@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Models.Entities;
-using Models.SeedData;
+using Domain.Entities;
+using Domain.SeedData;
 
 namespace Data.Seeder
 {

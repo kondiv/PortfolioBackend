@@ -1,4 +1,4 @@
-﻿using Models.Entities;
+﻿using Domain.Entities;
 
 namespace Data.Interfaces
 {

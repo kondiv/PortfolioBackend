@@ -1,8 +1,8 @@
-﻿using Models.Entities;
+﻿using Domain.Entities;
 using Data.Interfaces;
 using Services.Interfaces;
 using Services.Validators;
-using Models.Exceptions;
+using Domain.Exceptions;
 
 namespace Services.Services
 {
@@ -19,7 +19,7 @@ namespace Services.Services
             _projectValidator = projectValidator;
         }
 
-        public async Task AddAsync(Project project, CancellationToken cancellationToken = default)
+        public async Task AddAsync(Project project, CancellationToken cancellationToken)
         {
             var validationResult = _projectValidator.Validate(project);
 
@@ -33,14 +33,14 @@ namespace Services.Services
             await _projectRepository.AddAsync(project, cancellationToken);
         }
 
-        public async Task RemoveAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task RemoveAsync(Guid id, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             await _projectRepository.RemoveAsync(id, cancellationToken);
         }
 
-        public async Task<IEnumerable<Project>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Project>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _projectRepository.GetAllAsync(cancellationToken);
         }

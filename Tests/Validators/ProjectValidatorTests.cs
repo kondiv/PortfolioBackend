@@ -1,5 +1,5 @@
 ﻿using FluentAssertions;
-using Models.Entities;
+using Domain.Entities;
 using Services.Validators;
 using Xunit;
 

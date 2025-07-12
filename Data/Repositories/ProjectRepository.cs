@@ -1,7 +1,7 @@
 ﻿using Data.Exceptions;
 using Data.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Models.Entities;
+using Domain.Entities;
 
 namespace Data.Repositories
 {
@@ -14,18 +14,18 @@ namespace Data.Repositories
             _context = dbContext;
         }
 
-        public async Task AddAsync(Project project, CancellationToken cancellationToken = default)
+        public async Task AddAsync(Project project, CancellationToken cancellationToken)
         {
             await _context.AddAsync(project, cancellationToken: cancellationToken);
             await _context.SaveChangesAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task<IEnumerable<Project>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<Project>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _context.Projects.ToListAsync(cancellationToken: cancellationToken);
         }
 
-        public async Task RemoveAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task RemoveAsync(Guid id, CancellationToken cancellationToken)
         {
             var project = await _context.Projects.FindAsync([id], cancellationToken: cancellationToken);
 
