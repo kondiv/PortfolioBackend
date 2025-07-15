@@ -1,68 +1,27 @@
-using Data.Exceptions;
-using Data.Interfaces;
-using Mapster;
-using MapsterMapper;
 using Microsoft.AspNetCore.Identity;
-using Domain.Dto;
-using Domain.Entities;
+using Domain.Dto.Authentication;
 using Services.Interfaces;
+using MediatR;
+using Services.Features.UserRegistration.DeveloperRegistration;
 
 namespace Services.Services;
 
 public class AuthenticationService : IAuthenticationService
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IUserSkillService _userSkillService;
-    private readonly ITokenService _tokenService;
-    private readonly IMapper _mapper;
-    private readonly PortfolioContext _context;
+    private readonly IMediator _mediator;
 
-    public AuthenticationService(
-        UserManager<ApplicationUser> userManager,
-        IUserSkillService userSkillService,
-        ITokenService tokenService,
-        IMapper mapper,
-        PortfolioContext context)
+    public AuthenticationService(IMediator mediator)
     {
-        _userManager = userManager;
-        _tokenService = tokenService;
-        _mapper = mapper;
-        _context = context;
+        _mediator = mediator;
     }
 
     public async Task<IdentityResult> RegisterDeveloperAsync(
         DeveloperRegistrationDto developerRegistrationDto,
         CancellationToken cancellationToken = default)
     {
-        var user = _mapper.Map<ApplicationUser>(developerRegistrationDto);
-        
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-        
-        var result = await _userManager.CreateAsync(user, developerRegistrationDto.Password);
-        
-        if (!result.Succeeded)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            return result;
-        }
-        
-        var addingSkillsResult = await _userSkillService.AddRangeAsync(user, developerRegistrationDto.Skills, cancellationToken);
-
-        if (!addingSkillsResult.Succeeded)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            var errors = addingSkillsResult.Errors.Select(e =>
-                new IdentityError()
-                {
-                    Code = e.Code,
-                    Description = e.Description
-                }).ToArray();
-            return IdentityResult.Failed(errors);
-        }
-
-        await transaction.CommitAsync(cancellationToken);
-        
-        return IdentityResult.Success;
+        var request = new RegisterDeveloperCommand(developerRegistrationDto);
+        var result = await _mediator.Send(request, cancellationToken);
+        return result;
     }
 
     public Task<IdentityResult> RegisterEmployerAsync(

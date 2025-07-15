@@ -5,6 +5,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Services.Mapper;
 using Xunit;
+using Domain.Dto.Authentication;
 
 namespace Tests.Mappers;
 

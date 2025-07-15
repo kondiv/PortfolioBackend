@@ -1,12 +1,11 @@
-using Data.Exceptions;
 using Data.Interfaces;
 using FluentAssertions;
 using Domain.Dto;
 using Domain.Entities;
 using Moq;
 using Services.Interfaces;
-using Services.Services;
 using Xunit;
+using Services.Validators;
 
 namespace Tests.Services;
 

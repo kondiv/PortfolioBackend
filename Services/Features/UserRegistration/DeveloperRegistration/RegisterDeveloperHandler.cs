@@ -2,17 +2,16 @@ using Domain.Entities;
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Services.Features.UserRegistration.DeveloperRegistration;
 
-namespace Services.Features.UserRegistration;
+namespace Services.Features.UserRegistration.DeveloperRegistration;
 
-public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, IdentityResult>
+public class RegisterDeveloperHandler : IRequestHandler<RegisterDeveloperCommand, IdentityResult>
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IMapper _mapper;
     private readonly IMediator _mediator;
 
-    public RegisterUserHandler(
+    public RegisterDeveloperHandler(
         UserManager<ApplicationUser> userManager,
         IMapper mapper,
         IMediator mediator)
@@ -22,7 +21,7 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, Identity
         _mediator = mediator;
     }
 
-    public async Task<IdentityResult> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public async Task<IdentityResult> Handle(RegisterDeveloperCommand request, CancellationToken cancellationToken)
     {
         var user = _mapper.Map<ApplicationUser>(request.DeveloperRegistrationDto);
         var result = await _userManager.CreateAsync(user, request.DeveloperRegistrationDto.Password);
@@ -32,8 +31,10 @@ public class RegisterUserHandler : IRequestHandler<RegisterUserCommand, Identity
             return result;
         }
 
-        await _mediator.Publish(new DeveloperRegisteredEvent(user.Id, request.DeveloperRegistrationDto.Skills), cancellationToken);
-        
+        await _mediator.Publish(
+            new DeveloperRegisteredEvent(user.Id, request.DeveloperRegistrationDto.Skills),
+            cancellationToken);
+
         return result;
     }
 }

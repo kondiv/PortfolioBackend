@@ -2,7 +2,7 @@ using Data.Interfaces;
 using Domain.Dto;
 using Services.Interfaces;
 
-namespace Services.Services;
+namespace Services.Validators;
 
 public sealed class SkillValidator : ISkillValidator
 {
@@ -12,13 +12,13 @@ public sealed class SkillValidator : ISkillValidator
     {
         _skillRepository = skillRepository;
     }
-    
+
     public async Task<bool> ValidateSkillsAsync(List<SkillDto> skills, CancellationToken cancellationToken)
     {
         var skillIds = skills.Select(skill => skill.SkillId).ToList();
-        
+
         var skillsById = await _skillRepository.GetSkillsByIdAsync(skillIds, cancellationToken);
-        
+
         return skills.Count == skillsById.Count();
     }
 }

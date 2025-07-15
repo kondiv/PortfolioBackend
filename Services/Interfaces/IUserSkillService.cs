@@ -6,6 +6,5 @@ namespace Services.Interfaces;
 
 public interface IUserSkillService
 {
-    Task AddAsync(string userId, SkillDto skill, CancellationToken cancellationToken = default);
-    Task<Result> AddRangeAsync(string userId, IEnumerable<SkillDto> skills, CancellationToken cancellationToken = default);
+    Task<Result> AddRangeAsync(string userId, List<SkillDto> skills, CancellationToken cancellationToken = default);
 }

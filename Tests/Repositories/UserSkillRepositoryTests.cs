@@ -1,5 +1,7 @@
 using Data.Interfaces;
+using Data.Repositories;
 using Domain.Entities;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
@@ -14,15 +16,36 @@ public class UserSkillRepositoryTests
         var context = GetDbContext();
         IUserSkillRepository userSkillRepository = new UserSkillRepository(context);
 
-        var userSkill = new UserSkill()
+        var userSkillsToAdd = new List<UserSkill>()
         {
-            SkillId = 1,
-            UserId = "1",
-            Proficiency = 2
+            new()
+            {
+                UserId = "1",
+                SkillId = 1,
+                Proficiency = 2
+            },
+            new()
+            {
+                UserId = "1",
+                SkillId = 3,
+                Proficiency = 4
+            },
+            new()
+            {
+                UserId = "1",
+                SkillId = 2,
+                Proficiency = 5
+            }
         };
         
         // Act
-        await userSkillRepository.AddAsync(userSkill);
+        await userSkillRepository.AddRangeAsync(userSkillsToAdd);
+
+        // Assert
+        var userSkills = await context.UserSkills.ToListAsync();
+
+        userSkills.Should().NotBeNull().And.NotBeEmpty();
+        userSkills.Should().HaveCount(3);
     }
     
     private PortfolioContext GetDbContext()

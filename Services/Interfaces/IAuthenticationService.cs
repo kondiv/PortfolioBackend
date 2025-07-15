@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Identity;
-using Domain.Dto;
+using Domain.Dto.Authentication;
 
 namespace Services.Interfaces;
 
