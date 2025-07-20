@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using System.Text.Json.Serialization;
+using Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 
 namespace Domain.Entities
@@ -13,6 +14,7 @@ namespace Domain.Entities
         public DeveloperLevel? DeveloperLevel { get; set; }
         public ICollection<UserSkill> UserSkills { get; set; } = [];
 
+        [JsonIgnore]
         public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
     }
 }

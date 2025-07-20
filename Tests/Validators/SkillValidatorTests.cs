@@ -2,12 +2,13 @@ using Data.Interfaces;
 using FluentAssertions;
 using Domain.Dto;
 using Domain.Entities;
+using Domain.Values;
 using Moq;
 using Services.Interfaces;
 using Xunit;
 using Services.Validators;
 
-namespace Tests.Services;
+namespace Tests.Validators;
 
 public class SkillValidatorTests
 {
@@ -17,7 +18,7 @@ public class SkillValidatorTests
         // Arrange
         var skillRepositoryMock = new Mock<ISkillRepository>();
         ISkillValidator skillValidator = new SkillValidator(skillRepositoryMock.Object);
-        var skillDto = new SkillDto(1, 4);
+        var skillDto = new SkillDto(1, new Proficiency(4));
         var skillDtoList = new List<SkillDto> { skillDto };
 
         skillRepositoryMock
@@ -41,7 +42,7 @@ public class SkillValidatorTests
         // Arrange
         var skillRepositoryMock = new Mock<ISkillRepository>();
         ISkillValidator skillValidator = new SkillValidator(skillRepositoryMock.Object);
-        var skillDto = new SkillDto(1, 4);
+        var skillDto = new SkillDto(1, new Proficiency(4));
         var skillDtoList = new List<SkillDto> { skillDto };
 
         skillRepositoryMock
@@ -64,7 +65,7 @@ public class SkillValidatorTests
         // Arrange
         var skillRepositoryMock = new Mock<ISkillRepository>();
         ISkillValidator skillValidator = new SkillValidator(skillRepositoryMock.Object);
-        var skillDto = new SkillDto(1, 4);
+        var skillDto = new SkillDto(1, new Proficiency(4));
         var skillDtoList = new List<SkillDto> { skillDto };
         
         var cancellationToken = new CancellationToken(canceled: true);

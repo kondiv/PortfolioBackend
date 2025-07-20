@@ -21,7 +21,6 @@ public class RefreshTokenRepositoryTests
         var refreshToken = new RefreshToken()
         {
             CreatedAt = DateTime.Now,
-            CreatedByIp = "127.0.0.1",
             ExpiresAt = DateTime.Now.AddDays(30),
             RefreshTokenId = Guid.NewGuid(),
             ReplacedByToken = null,

@@ -63,6 +63,8 @@ public partial class PortfolioContext : IdentityDbContext<ApplicationUser, Appli
 
         modelBuilder.Entity<RefreshToken>(entity =>
         {
+            entity.ToTable("RefreshToken");
+            
             entity.HasKey(e => e.RefreshTokenId);
 
             entity.Property(e => e.RefreshTokenId)
@@ -83,8 +85,6 @@ public partial class PortfolioContext : IdentityDbContext<ApplicationUser, Appli
             entity.Property(e => e.PermissionId)
                 .ValueGeneratedOnAdd()
                 .HasColumnName("permission_id");
-            
-
         });
 
         modelBuilder.Entity<RolePermission>(entity =>

@@ -6,7 +6,6 @@
         public string Token { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
         public DateTime ExpiresAt { get; set; }
-        public string CreatedByIp { get; set; } = null!;
         public DateTime? Revoked { get; set; }
         public string? ReplacedByToken { get; set; }
 

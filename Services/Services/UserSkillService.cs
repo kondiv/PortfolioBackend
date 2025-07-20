@@ -35,16 +35,15 @@ namespace Services.Services
             return Result.Success;
         }
 
-        private List<UserSkill> CreateUserSkills(string userId, List<SkillDto> skills)
+        private static List<UserSkill> CreateUserSkills(string userId, List<SkillDto> skills)
         {
             return skills.Select(s =>
             new UserSkill()
             { 
                 UserId = userId,
                 SkillId = s.SkillId,
-                Proficiency = s.Proficiency,
+                Proficiency = s.Proficiency.Value,
             }).ToList();
-
         }
     }
 }

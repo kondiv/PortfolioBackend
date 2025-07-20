@@ -1,33 +1,72 @@
-using Microsoft.AspNetCore.Identity;
+using Data.Interfaces;
 using Domain.Dto.Authentication;
+using Microsoft.Extensions.Logging;
+using Services.Factories.RegistrationStrategyFactory;
 using Services.Interfaces;
-using MediatR;
-using Services.Features.UserRegistration.DeveloperRegistration;
+using Services.Results;
 
 namespace Services.Services;
 
 public class AuthenticationService : IAuthenticationService
 {
-    private readonly IMediator _mediator;
-
-    public AuthenticationService(IMediator mediator)
+    private readonly IRegistrationStrategyFactory _registrationStrategyFactory;
+    private readonly ITokenService _tokenService;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly ILogger<AuthenticationService> _logger;
+    
+    public AuthenticationService(
+        IRegistrationStrategyFactory registrationStrategyFactory,
+        ITokenService tokenService,
+        IRefreshTokenRepository refreshTokenRepository,
+        ILogger<AuthenticationService> logger)
     {
-        _mediator = mediator;
+        _registrationStrategyFactory = registrationStrategyFactory;
+        _tokenService = tokenService;
+        _refreshTokenRepository = refreshTokenRepository;
+        _logger = logger;
     }
 
-    public async Task<IdentityResult> RegisterDeveloperAsync(
-        DeveloperRegistrationDto developerRegistrationDto,
+    public async Task<RegistrationResult> RegisterDeveloperAsync(
+        DeveloperRegistrationDto developerRegistrationDto, 
         CancellationToken cancellationToken = default)
     {
-        var request = new RegisterDeveloperCommand(developerRegistrationDto);
-        var result = await _mediator.Send(request, cancellationToken);
+        _logger.LogInformation("Registering developer");
+        
+        var strategy = _registrationStrategyFactory.CreateDeveloperRegistrationStrategy(developerRegistrationDto);
+
+        var result = await strategy.Register(cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            _logger.LogError("Failed to register developer");
+        }
+        else
+        {
+            _logger.LogInformation("Developer registered successfully");
+        }
+        
         return result;
     }
 
-    public Task<IdentityResult> RegisterEmployerAsync(
+    public async Task<RegistrationResult> RegisterUserAsync(
         EmployerRegistrationDto employerRegistrationDto,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        _logger.LogInformation("Registering user");
+        
+        var strategy = _registrationStrategyFactory.CreateUserRegistrationStrategy(employerRegistrationDto);
+        
+        var result = await strategy.Register(cancellationToken);
+
+        if (result.Succeeded)
+        {
+            _logger.LogInformation("Registered user");
+        }
+        else
+        {
+            _logger.LogError("Failed to register user");
+        }
+
+        return result;
     }
 }

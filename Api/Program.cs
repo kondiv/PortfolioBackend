@@ -8,6 +8,7 @@ using Services.Interfaces;
 using Services.Services;
 using Services.Validators;
 using Mapster;
+using Services.Factories.RegistrationStrategyFactory;
 using Services.Mapper;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,20 +25,38 @@ builder.Services
 #region Other
 
 builder.Services.AddJwtSettings(builder.Configuration);
-builder.Services.AddSingleton<ProjectValidator>();
 builder.Services.AddTransient<RolePermissionSeeder>();
+
+#endregion
+
+#region Validators
+
+builder.Services.AddSingleton<ProjectValidator>();
+builder.Services.AddScoped<ISkillValidator, SkillValidator>();
+
+#endregion
+
+#region Factories
+
+builder.Services.AddScoped<IRegistrationStrategyFactory, RegistrationStrategyFactory>();
 
 #endregion
 
 #region Services
 
 builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IUserSkillService, UserSkillService>();
+builder.Services.AddScoped<ITokenService, JwtTokenService>();
 
 #endregion
 
 #region Repositories
 
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
+builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IUserSkillRepository, UserSkillRepository>();
 
 #endregion
 
@@ -69,7 +88,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost",
         policy => policy
-            .AllowAnyOrigin() // 
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod());
 });

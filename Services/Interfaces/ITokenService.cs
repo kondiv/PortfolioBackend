@@ -1,10 +1,11 @@
 ﻿using System.Security.Claims;
+using Domain.Dto;
+using Domain.Entities;
 
 namespace Services.Interfaces
 {
     public interface ITokenService
     {
-        string GenerateJwtAccessToken(List<Claim> claims);
-        string GenerateRefreshToken();
+        Task<Tokens> GenerateTokensAsync(ApplicationUser user);
     }
 }

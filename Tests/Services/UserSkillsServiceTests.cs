@@ -1,6 +1,7 @@
 using Data.Interfaces;
 using Domain.Dto;
 using Domain.Entities;
+using Domain.Values;
 using Moq;
 using Services.Interfaces;
 using Services.Services;
@@ -28,9 +29,9 @@ public class UserSkillsServiceTests
         var userId = Guid.NewGuid().ToString();
         var skills = new List<SkillDto>()
         {
-            new SkillDto(1, 5),
-            new SkillDto(2, 3),
-            new SkillDto(3, 4),
+            new SkillDto(1, new Proficiency(5)),
+            new SkillDto(2, new Proficiency(3)),
+            new SkillDto(3, new Proficiency(4)),
         };
 
         // Act

@@ -50,7 +50,7 @@ namespace Data.Seeder
         {
             foreach(var permissionName in DefaultPermissions.All())
             {
-                bool exist = await _context.Permissions.AnyAsync(p => p.Name == permissionName);
+                var exist = await _context.Permissions.AnyAsync(p => p.Name == permissionName);
 
                 if (!exist)
                 {
@@ -65,7 +65,7 @@ namespace Data.Seeder
         {
             foreach(var roleName in DefaultRoles.All())
             {
-                bool exist = await _context.Roles.AnyAsync(r => r.Name == roleName);
+                var exist = await _context.Roles.AnyAsync(r => r.Name == roleName);
 
                 if(!exist)
                 {

@@ -4,19 +4,35 @@ using Services.Services;
 using Xunit;
 using Data.Configuration;
 using System.Security.Claims;
+using Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Moq;
 using Services.Interfaces;
 
 namespace Tests.Services
 {
     public class JwtServiceTests
     {
-        private readonly JwtSettings _settings;
+        private readonly Mock<UserManager<ApplicationUser>> _mockUserManager;
         private readonly ITokenService _jwtService;
         private readonly JwtSecurityTokenHandler _jwtSecurityTokenHandler = new();
 
         public JwtServiceTests()
         {
-            _settings = new JwtSettings()
+            var mockUserStore = new Mock<IUserStore<ApplicationUser>>();
+
+            _mockUserManager = new Mock<UserManager<ApplicationUser>>(
+                mockUserStore.Object,
+                null, 
+                null, 
+                null, // IEnumerable<IUserValidator<ApplicationUser>>
+                null, // IEnumerable<IPasswordValidator<ApplicationUser>>
+                null, // ILookupNormalizer
+                null, // IdentityErrorDescriber
+                null, // IServiceProvider
+                null);
+            
+            var settings = new JwtSettings()
             {
                 Audience = "test-audience",
                 Issuer = "test-issuer",
@@ -24,39 +40,38 @@ namespace Tests.Services
                 LifetimeMinutes = 10
             };
 
-            _jwtService = new JwtTokenService(_settings);
+            _jwtService = new JwtTokenService(_mockUserManager.Object, settings);
         }
 
         [Fact]
-        public void GenerateJwtAccessToken_ShouldReturnValidJwt()
+        public async Task GenerateJwtAccessToken_ShouldReturnValidJwt()
         {
             // Arrange
-            var claims = new List<Claim>()
+            var user = new ApplicationUser()
             {
-                new Claim(ClaimTypes.Role, "admin"),
-                new Claim(ClaimTypes.Name, "test-user")
+                Email = "email",
+                UserName = "userName"
             };
 
+            _mockUserManager
+                .Setup(m => m.GetRolesAsync(user))
+                .ReturnsAsync(new List<string>() { "Developer" });
+            
             // Act
-            string token = _jwtService.GenerateJwtAccessToken(claims);
-
-            // Assert         
-            token.Should().NotBeNullOrEmpty();
-
-            var jwtToken = _jwtSecurityTokenHandler.ReadToken(token);
-
-            jwtToken.Issuer.Should().Be(_settings.Issuer);
-        }
-
-        [Fact]
-        public void GenerateRefreshToken_ReturnsValidFormat()
-        {
-            // Act
-            var token = _jwtService.GenerateRefreshToken();
-
+            var tokens = await _jwtService.GenerateTokensAsync(user);
+            
             // Assert
-            Assert.NotNull(token);
-            Assert.InRange(token.Length, 40, 44); // Длина Base64 для 32 байт
+            tokens.RefreshToken.Token.Should().NotBeNullOrEmpty();
+            tokens.RefreshToken.UserId.Should().Be(user.Id);
+            
+            var accessToken = new JwtSecurityTokenHandler().ReadJwtToken(tokens.AccessToken);
+
+            accessToken.Claims
+                .Where(c => c.Type == ClaimTypes.Role)
+                .Select(c => c.Value)
+                .Should().Contain("Developer");
+            accessToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Email && c.Value == user.Email);
+            accessToken.Claims.Should().Contain(c => c.Type == ClaimTypes.Name && c.Value == user.UserName);
         }
     }
 }

@@ -21,5 +21,19 @@ namespace Api.Extensions
 
             return services;
         }
+
+        public static IServiceCollection AddCookie(this IServiceCollection services)
+        {
+            services.AddAuthentication()
+                .AddCookie(options =>
+                {
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.Cookie.SameSite = SameSiteMode.Strict;
+                    options.ExpireTimeSpan = TimeSpan.FromHours(1);
+                });
+
+            return services;
+        }
     }
 }

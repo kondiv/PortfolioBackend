@@ -1,10 +1,11 @@
-using Microsoft.AspNetCore.Identity;
+using Domain.Dto;
 using Domain.Dto.Authentication;
+using Services.Results;
 
 namespace Services.Interfaces;
 
 public interface IAuthenticationService
 {
-    Task<IdentityResult> RegisterDeveloperAsync(DeveloperRegistrationDto developerRegistrationDto, CancellationToken cancellationToken = default);
-    Task<IdentityResult> RegisterEmployerAsync(EmployerRegistrationDto employerRegistrationDto, CancellationToken cancellationToken = default);
+    Task<RegistrationResult> RegisterDeveloperAsync(DeveloperRegistrationDto developerRegistrationDto, CancellationToken cancellationToken = default);
+    Task<RegistrationResult> RegisterUserAsync(EmployerRegistrationDto employerRegistrationDto, CancellationToken cancellationToken = default);
 }

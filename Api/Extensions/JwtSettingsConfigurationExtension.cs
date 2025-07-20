@@ -1,4 +1,5 @@
 ﻿using Data.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Api.Extensions
 {
@@ -12,6 +13,9 @@ namespace Api.Extensions
                 .Bind(configuration.GetSection("Jwt"))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
+            
+            services.AddSingleton(sp => 
+                sp.GetRequiredService<IOptions<JwtSettings>>().Value);
 
             return services;
         }

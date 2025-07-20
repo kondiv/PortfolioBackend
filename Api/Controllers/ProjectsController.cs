@@ -18,7 +18,7 @@ namespace Api.Controllers
             _projectService = projectService;
         }
 
-        [HttpGet("projects/all")]
+        [HttpGet("all")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status499ClientClosedRequest)]
         public async Task<ActionResult<IEnumerable<Project>>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -34,7 +34,7 @@ namespace Api.Controllers
             }
         }
 
-        [HttpDelete("project/remove/{projectId:guid}")]
+        [HttpDelete("sremove/{projectId:guid}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status499ClientClosedRequest)]
@@ -57,7 +57,7 @@ namespace Api.Controllers
             }
         }
 
-        [HttpPost("project/add")]
+        [HttpPost("add")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status499ClientClosedRequest)]
